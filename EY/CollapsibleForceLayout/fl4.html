@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html>
+  <head><script>(function(){(function(){function e(a){this.t={};this.tick=function(a,c,b){this.t[a]=[void 0!=b?b:(new Date).getTime(),c];if(void 0==b)try{window.console.timeStamp("CSI/"+a)}catch(h){}};this.tick("start",null,a)}var d;window.performance&&(d=window.performance.timing);var f=d?new e(d.responseStart):new e;window.mobilespeed_jstiming={Timer:e,load:f};if(d){var c=d.navigationStart;var a=d.responseStart;0<c&&a>=c&&(window.mobilespeed_jstiming.srt=a-c)}if(d){var b=window.mobilespeed_jstiming.load;0<c&&a>=c&&(b.tick("_wtsrt",
+void 0,c),b.tick("wtsrt_","_wtsrt",a),b.tick("tbsd_","wtsrt_"))}try{a=null,window.chrome&&window.chrome.csi&&(a=Math.floor(window.chrome.csi().pageT),b&&0<c&&(b.tick("_tbnd",void 0,window.chrome.csi().startE),b.tick("tbnd_","_tbnd",c))),null==a&&window.gtbExternal&&(a=window.gtbExternal.pageT()),null==a&&window.external&&(a=window.external.pageT,b&&0<c&&(b.tick("_tbnd",void 0,window.external.startE),b.tick("tbnd_","_tbnd",c))),a&&(window.mobilespeed_jstiming.pt=a)}catch(g){}})();}).call(this);
+</script>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <link type="text/css" rel="stylesheet" href="style.css"/>
+    <style type="text/css">
+
+circle.node {
+  cursor: pointer;
+  stroke: #000;
+  stroke-width: .5px;
+}
+
+line.link {
+  fill: none;
+  stroke: #9ecae1;
+  stroke-width: 1.5px;
+}
+
+    </style>
+  </head>
+  <body>
+    <h2>
+      Flare code size<br>
+      force-directed graph
+    </h2>
+    <script type="text/javascript" src="d3f.min.js"></script>
+    <script type="text/javascript" src="geom.min.js"></script>
+    <script type="text/javascript" src="layout.min.js"></script>
+    <script type="text/javascript">
+
+var w = 1000,
+    h = 600,
+    node,
+    link,
+    root;
+
+var force = d3.layout.force()
+    .on("tick", tick)
+    .charge(function(d) { return d._children ? -d.size / 100 : -30; })
+    .linkDistance(function(d) { return d.target._children ? 80 : 30; })
+    .size([w, h - 160]);
+
+var vis = d3.select("body").append("svg:svg")
+    .attr("width", w)
+    .attr("height", h);
+
+d3.json("flare.json", function(json) {
+  root = json;
+  root.fixed = true;
+  root.x = w / 2;
+  root.y = h / 2 - 80;
+  update();
+});
+
+function update() {
+  var nodes = flatten(root),
+      links = d3.layout.tree().links(nodes);
+
+  // Restart the force layout.
+  force
+      .nodes(nodes)
+      .links(links)
+      .start();
+
+  // Update the links…
+  link = vis.selectAll("line.link")
+      .data(links, function(d) { return d.target.id; });
+
+  // Enter any new links.
+  link.enter().insert("svg:line", ".node")
+      .attr("class", "link")
+      .attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });
+
+  // Exit any old links.
+  link.exit().remove();
+
+  // Update the nodes…
+  node = vis.selectAll("circle.node")
+      .data(nodes, function(d) { return d.id; })
+      .style("fill", color);
+
+  node.transition()
+      .attr("r", function(d) { return d.children ? 4.5 : Math.sqrt(d.size) / 10; });
+
+  // Enter any new nodes.
+  node.enter().append("svg:circle")
+      .attr("class", "node")
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; })
+      .attr("r", function(d) { return d.children ? 4.5 : Math.sqrt(d.size) / 10; })
+      .style("fill", color)
+      .on("click", click)
+      .call(force.drag);
+
+  // Exit any old nodes.
+  node.exit().remove();
+}
+
+function tick() {
+  link.attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });
+
+  node.attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
+}
+
+// Color leaf nodes orange, and packages white or blue.
+function color(d) {
+  return d._children ? "#3182bd" : d.children ? "#c6dbef" : "#fd8d3c";
+}
+
+// Toggle children on click.
+function click(d) {
+  if (d.children) {
+    d._children = d.children;
+    d.children = null;
+  } else {
+    d.children = d._children;
+    d._children = null;
+  }
+  update();
+}
+
+// Returns a list of all nodes under the root.
+function flatten(root) {
+  var nodes = [], i = 0;
+
+  function recurse(node) {
+    if (node.children) node.size = node.children.reduce(function(p, v) { return p + recurse(v); }, 0);
+    if (!node.id) node.id = ++i;
+    nodes.push(node);
+    return node.size;
+  }
+
+  root.size = recurse(root);
+  return nodes;
+}
+
+    </script>
+  <script>(function(){var f="webkitvisibilitychange",g="_ns";var n;
+if(window.mobilespeed_jstiming){window.mobilespeed_jstiming.a={};window.mobilespeed_jstiming.b=1;var p=function(b,a,d){var c=b.t[a],e=b.t.start;if(c&&(e||d))return c=b.t[a][0],void 0!=d?e=d:e=e[0],Math.round(c-e)},q=function(b,a,d){var c,e="";window.mobilespeed_jstiming.srt&&(e+="&srt="+window.mobilespeed_jstiming.srt,delete window.mobilespeed_jstiming.srt);window.mobilespeed_jstiming.pt&&(e+="&tbsrt="+window.mobilespeed_jstiming.pt,delete window.mobilespeed_jstiming.pt);try{window.external&&window.external.tran?
+e+="&tran="+window.external.tran:window.gtbExternal&&window.gtbExternal.tran?e+="&tran="+window.gtbExternal.tran():window.chrome&&window.chrome.csi&&(e+="&tran="+window.chrome.csi().tran)}catch(w){}if(c=window.chrome)if(c=c.loadTimes){c().wasFetchedViaSpdy&&(e+="&p=s");if(c().wasNpnNegotiated){var e=e+"&npn=1",l=c().npnNegotiatedProtocol;l&&(e+="&npnv="+(encodeURIComponent||escape)(l))}c().wasAlternateProtocolAvailable&&(e+="&apa=1")}var k=b.t,u=k.start,l=[];c=[];for(var h in k)if("start"!=h&&0!=
+h.indexOf("_")){var m=k[h][1];m?k[m]&&c.push(h+"."+p(b,h,k[m][0])):u&&l.push(h+"."+p(b,h))}delete k.start;if(a)for(var r in a)e+="&"+r+"="+a[r];(a=d)||(a="https:"==document.location.protocol?"https://csi.gstatic.com/csi":"http://csi.gstatic.com/csi");return[a,"?v=3","&s="+(window.mobilespeed_jstiming.sn||"mobilespeed")+"&action=",b.name,c.length?"&it="+c.join(","):"",e,"&rt=",l.join(",")].join("")},t=function(b,a,d){b=q(b,a,d);if(!b)return"";a=new Image;var c=window.mobilespeed_jstiming.b++;window.mobilespeed_jstiming.a[c]=
+a;a.onload=a.onerror=function(){window.mobilespeed_jstiming&&delete window.mobilespeed_jstiming.a[c]};a.src=b;a=null;return b};n=function(b,a,d){if("prerender"==document.webkitVisibilityState)return!1;t(b,a,d);return!0};window.mobilespeed_jstiming.report=function(b,a,d){if("prerender"==document.webkitVisibilityState){var c=!1,e=function(){c||(a?a.prerender="1":a={prerender:"1"},n(b,a,d)&&(c=!0,document.removeEventListener(f,e,!1)))};document.addEventListener(f,e,!1);return""}return t(b,a,d)};var v=
+function(b,a,d,c){return 0<d?(c?b.tick(a,c,d):b.tick(a,"",d),!0):!1};window.mobilespeed_jstiming.getNavTiming=function(b){if(window.performance&&window.performance.timing){var a=window.performance.timing;v(b,"_dns",a.domainLookupStart)&&v(b,"dns_",a.domainLookupEnd,"_dns");v(b,"_con",a.connectStart)&&v(b,"con_",a.connectEnd,"_con");v(b,"_req",a.requestStart)&&v(b,"req_",a.responseStart,"_req");v(b,"_rcv",a.responseStart)&&v(b,"rcv_",a.responseEnd,"_rcv");if(v(b,g,a.navigationStart)){v(b,"ntsrt_",
+a.responseStart,g);v(b,"nsfs_",a.fetchStart,g);v(b,"nsrs_",a.redirectStart,g);v(b,"nsre_",a.redirectEnd,g);v(b,"nsds_",a.domainLookupStart,g);v(b,"nscs_",a.connectStart,g);v(b,"nsrqs_",a.requestStart,g);var d=!1;try{d=window.external&&window.external.startE}catch(c){}!d&&window.chrome&&window.chrome.csi&&(d=Math.floor(window.chrome.csi().startE));d&&(v(b,"_se",d),v(b,"sens_",a.navigationStart,"_se"));v(b,"ntplt0_",a.loadEventStart,g);v(b,"ntplt1_",a.loadEventEnd,g);window.chrome&&window.chrome.loadTimes&&
+(a=window.chrome.loadTimes().firstPaintTime)&&v(b,"nsfp_",1E3*a,g)}}}};}).call(this);
+</script><script>(function(){var a=window.mobilespeed_jstiming,b=a.load;window.top==window&&window.addEventListener("load",function(){b.name="load";b.tick("ol");a.getNavTiming(b);setTimeout(function(){a.report(b,{e:"default_policy"})},300)},!1);}).call(this);
+</script></body>
+</html>
